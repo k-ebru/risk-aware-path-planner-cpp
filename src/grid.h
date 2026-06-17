@@ -16,6 +16,8 @@ public:
     int getWidth() const;
     int getHeight() const;
 
+    bool checkLineCollision(double x1, double y1, double x2, double y2, int steps = 20) const;
+
     void printGrid(const std::vector<std::pair<int,int>>& path,
                    std::pair<int,int> start,
                    std::pair<int,int> goal,
