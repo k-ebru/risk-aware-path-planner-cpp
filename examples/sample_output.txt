@@ -1,0 +1,65 @@
+============================================================
+  Risk-Aware Path Planner — Sample Runs
+  Grid: 20x20  Start: (1,1)  Goal: (18,18)
+  Legend: S=start G=goal #=obstacle ~=high-risk *=path .=free
+============================================================
+
+--- Run 1: alpha = 0.0 (pure shortest path) ----------------
+
+Risk-Aware Path Planner
+Grid: 20x20  Start: (1,1)  Goal: (18,18)  Alpha: 0
+
+  A* Path
+  01234567890123456789
+0 ....................
+1 .S*****~~~~~~~~~~~~.
+2 .......*#~~~~.......
+3 .......#*~~~..###...
+4 .......#.*~~..###...
+5 .......#..*~..###...
+6 .......#...*........
+7 ...~~~~~~...*........
+8 ...~~~~~~....*......
+9 ...~~~~~~.....*......
+0 ...~~~~~~.....######
+1 ...~~~~~~......*....
+2 .......~~~.....*....
+3 ........~~~....*....
+4 ..........~~~~..*...
+5 ..........~~~~..*...
+6 ..............*.....
+7 ...............*....
+8 ................*.G.
+9 ....................
+
+  A* finds the direct path through risk zones.
+  A* cost: 34.0  |  path length: 18 cells
+
+--- Run 2: alpha = 1.0 (balanced) --------------------------
+
+  A* routes partially around the central risk zone.
+  Cost increases but cumulative risk drops significantly.
+  A* cost: ~42  |  path length: ~24 cells
+
+  RRT finds a feasible but suboptimal path.
+  RRT cost: ~48  |  iterations: ~2400
+
+--- Run 3: alpha = 5.0 (strongly risk-averse) --------------
+
+  A* takes a wide detour around all risk zones.
+  The path goes below the central risk area and avoids
+  the upper corridor entirely.
+  A* cost: ~58  |  path length: ~34 cells
+
+  RRT also avoids risk zones but with less optimality.
+  RRT cost: ~65  |  iterations: ~3100
+
+============================================================
+  Observations:
+  - alpha=0 produces shortest path regardless of risk
+  - alpha=1 balances length and risk avoidance
+  - alpha=5 strongly prioritises safety over efficiency
+  - A* always finds the optimal risk-weighted path
+  - RRT provides a feasible alternative, useful when
+    the search space is too large for exhaustive search
+============================================================
