@@ -10,36 +10,32 @@
 namespace {
 
 void build_environment(Grid& grid) {
-    // Vertical wall with gap (gap at y=14..15)
-    for (int y = 2; y < 14; ++y)
-        grid.setObstacle(7, y);
-    // Horizontal wall
-    for (int x = 12; x < 18; ++x)
+    // L-shaped wall: vertical segment
+    for (int y = 0; y < 10; ++y)
+        grid.setObstacle(10, y);
+    // L-shaped wall: horizontal segment
+    for (int x = 10; x < 16; ++x)
         grid.setObstacle(x, 10);
-    // Small block
-    for (int y = 3; y < 6; ++y)
+
+    // Small block in lower-right
+    for (int y = 14; y < 17; ++y)
         for (int x = 14; x < 17; ++x)
             grid.setObstacle(x, y);
 
-    // High-risk zone 1: upper corridor (narrow passage risk)
-    for (int y = 0; y < 5; ++y)
-        for (int x = 8; x < 12; ++x)
-            grid.setRisk(x, y, 0.8);
-
-    // High-risk zone 2: central area
-    for (int y = 7; y < 12; ++y)
-        for (int x = 3; x < 7; ++x)
+    // High-risk zone: the direct southern corridor (the "easy" detour)
+    for (int y = 11; y < 16; ++y)
+        for (int x = 4; x < 10; ++x)
             grid.setRisk(x, y, 0.9);
 
-    // High-risk zone 3: lower-right passage
-    for (int y = 14; y < 18; ++y)
-        for (int x = 10; x < 15; ++x)
-            grid.setRisk(x, y, 0.7);
+    // High-risk zone: upper-right area past the wall
+    for (int y = 1; y < 6; ++y)
+        for (int x = 11; x < 16; ++x)
+            grid.setRisk(x, y, 0.8);
 
-    // Moderate risk band
-    for (int y = 12; y < 15; ++y)
-        for (int x = 7; x < 10; ++x)
-            grid.setRisk(x, y, 0.4);
+    // Moderate risk near goal approach
+    for (int y = 16; y < 19; ++y)
+        for (int x = 10; x < 14; ++x)
+            grid.setRisk(x, y, 0.5);
 }
 
 double path_euclidean_length(const std::vector<std::pair<int,int>>& path) {
