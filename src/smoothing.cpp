@@ -37,6 +37,7 @@ SmoothedPath smooth_path(const std::vector<std::pair<int,int>>& raw_path,
                         raw_path[current].first, raw_path[current].second,
                         raw_path[farthest].first, raw_path[farthest].second);
 
+                    // Small tolerance (0.05) to avoid rejecting shortcuts due to float rounding
                     if (shortcut_risk > path_max_risk + 0.05) {
                         --farthest;
                         continue;

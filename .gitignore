@@ -7,3 +7,5 @@ cmake-build-*/
 *.obj
 CMakeCache.txt
 CMakeFiles/
+__pycache__/
+*.pyc
