@@ -1,14 +1,16 @@
 #include "grid.h"
 #include "astar.h"
 #include "rrt.h"
+#include "smoothing.h"
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <cmath>
 
 namespace {
 
 void build_environment(Grid& grid) {
-    // Vertical wall with gap
+    // Vertical wall with gap (gap at y=14..15)
     for (int y = 2; y < 14; ++y)
         grid.setObstacle(7, y);
     // Horizontal wall
@@ -38,6 +40,16 @@ void build_environment(Grid& grid) {
     for (int y = 12; y < 15; ++y)
         for (int x = 7; x < 10; ++x)
             grid.setRisk(x, y, 0.4);
+}
+
+double path_euclidean_length(const std::vector<std::pair<int,int>>& path) {
+    double len = 0.0;
+    for (size_t i = 1; i < path.size(); ++i) {
+        double dx = path[i].first - path[i-1].first;
+        double dy = path[i].second - path[i-1].second;
+        len += std::sqrt(dx * dx + dy * dy);
+    }
+    return len;
 }
 
 } // namespace
@@ -70,17 +82,24 @@ int main(int argc, char* argv[]) {
               << "  Goal: (" << goal.first << "," << goal.second << ")"
               << "  Alpha: " << alpha << "\n";
 
-    // A* search
+    // --- A* search ---
     AStarResult astar_result = astar_search(grid, start, goal, alpha);
     if (astar_result.found) {
-        grid.printGrid(astar_result.path, start, goal, "A* Path");
+        grid.printGrid(astar_result.path, start, goal, "A* Raw Path");
         std::cout << "  A* cost: " << astar_result.total_cost
                   << "  |  path length: " << astar_result.path.size() << " cells\n";
+
+        // Smooth the A* path
+        SmoothedPath smoothed = smooth_path(astar_result.path, grid);
+        grid.printGrid(smoothed.path, start, goal, "A* Smoothed Path");
+        std::cout << "  Smoothed: " << smoothed.original_length
+                  << " -> " << smoothed.smoothed_length << " waypoints"
+                  << "  |  euclidean length: " << path_euclidean_length(smoothed.path) << "\n";
     } else {
         std::cout << "  A*: no path found\n";
     }
 
-    // RRT search
+    // --- RRT search ---
     RRTResult rrt_result = rrt_search(grid, start, goal, alpha);
     if (rrt_result.found) {
         grid.printGrid(rrt_result.path, start, goal, "RRT Path");
@@ -92,7 +111,7 @@ int main(int argc, char* argv[]) {
                   << " iterations\n";
     }
 
-    // Comparison
+    // --- Comparison ---
     if (astar_result.found && rrt_result.found) {
         std::cout << "\nComparison (alpha=" << alpha << "):\n"
                   << "  A* cost:  " << astar_result.total_cost << "\n"

@@ -9,6 +9,7 @@ add_executable(planner
     src/grid.cpp
     src/astar.cpp
     src/rrt.cpp
+    src/smoothing.cpp
 )
 
 target_include_directories(planner PRIVATE src)
