@@ -42,8 +42,11 @@ AStarResult astar_search(const Grid& grid,
     std::unordered_map<int, double> g_costs;
     std::unordered_map<int, int> came_from;
 
-    constexpr int dx[] = {0, 0, -1, 1};
-    constexpr int dy[] = {-1, 1, 0, 0};
+    // 8-connected movement: cardinal + diagonal
+    constexpr int dx[] = {1, 0, -1, 0, 1, 1, -1, -1};
+    constexpr int dy[] = {0, 1, 0, -1, 1, -1, 1, -1};
+    constexpr double move_cost[] = {1.0, 1.0, 1.0, 1.0,
+                                    1.41421356, 1.41421356, 1.41421356, 1.41421356};
 
     int start_key = encode(start.first, start.second, w);
     g_costs[start_key] = 0.0;
@@ -76,14 +79,14 @@ AStarResult astar_search(const Grid& grid,
         if (current.g_cost > g_costs[current_key])
             continue;
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 8; ++i) {
             int nx = current.x + dx[i];
             int ny = current.y + dy[i];
 
             if (!grid.isValid(nx, ny))
                 continue;
 
-            double step_cost = 1.0 + alpha * grid.getRisk(nx, ny);
+            double step_cost = move_cost[i] + alpha * grid.getRisk(nx, ny);
             double new_g = current.g_cost + step_cost;
             int neighbor_key = encode(nx, ny, w);
 
