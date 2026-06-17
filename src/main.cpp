@@ -6,37 +6,9 @@
 #include <string>
 #include <cstring>
 #include <cmath>
+#include <iomanip>
 
 namespace {
-
-void build_environment(Grid& grid) {
-    // L-shaped wall: vertical segment
-    for (int y = 0; y < 10; ++y)
-        grid.setObstacle(10, y);
-    // L-shaped wall: horizontal segment
-    for (int x = 10; x < 16; ++x)
-        grid.setObstacle(x, 10);
-
-    // Small block in lower-right
-    for (int y = 14; y < 17; ++y)
-        for (int x = 14; x < 17; ++x)
-            grid.setObstacle(x, y);
-
-    // High-risk zone: the direct southern corridor (the "easy" detour)
-    for (int y = 11; y < 16; ++y)
-        for (int x = 4; x < 10; ++x)
-            grid.setRisk(x, y, 0.9);
-
-    // High-risk zone: upper-right area past the wall
-    for (int y = 1; y < 6; ++y)
-        for (int x = 11; x < 16; ++x)
-            grid.setRisk(x, y, 0.8);
-
-    // Moderate risk near goal approach
-    for (int y = 16; y < 19; ++y)
-        for (int x = 10; x < 14; ++x)
-            grid.setRisk(x, y, 0.5);
-}
 
 double path_euclidean_length(const std::vector<std::pair<int,int>>& path) {
     double len = 0.0;
@@ -46,6 +18,13 @@ double path_euclidean_length(const std::vector<std::pair<int,int>>& path) {
         len += std::sqrt(dx * dx + dy * dy);
     }
     return len;
+}
+
+double path_total_risk(const std::vector<std::pair<int,int>>& path, const Grid& grid) {
+    double total = 0.0;
+    for (auto& [x, y] : path)
+        total += grid.getRisk(x, y);
+    return total;
 }
 
 } // namespace
@@ -65,57 +44,93 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    constexpr int grid_size = 20;
-    Grid grid(grid_size, grid_size);
-    build_environment(grid);
+    constexpr int W = 30;
+    constexpr int H = 30;
+    Grid grid(W, H);
 
-    std::pair<int,int> start = {1, 1};
-    std::pair<int,int> goal  = {18, 18};
+    // === Vertical wall at x=15 with 3 gaps ===
+    // Gap A (y=4,5):   closest to start/goal — HIGH RISK passage
+    // Gap B (y=14,15): medium distance — MEDIUM RISK passage
+    // Gap C (y=25,26): farthest — SAFE passage
+    for (int y = 0; y < H; ++y) {
+        bool is_gap = (y == 4 || y == 5)
+                   || (y == 14 || y == 15)
+                   || (y == 25 || y == 26);
+        if (!is_gap)
+            grid.setObstacle(15, y);
+    }
 
+    // === Risk zones — narrow bands around the wall ===
+    // Risk only near the crossing area so vertical travel is safe
+
+    // Gap A crossing zone (y=1..7, x=10..20): HIGH RISK
+    for (int y = 1; y <= 7; ++y)
+        for (int x = 10; x <= 20; ++x)
+            grid.setRisk(x, y, 0.9);
+
+    // Gap B crossing zone (y=11..18, x=10..20): MEDIUM RISK
+    for (int y = 11; y <= 18; ++y)
+        for (int x = 10; x <= 20; ++x)
+            grid.setRisk(x, y, 0.5);
+
+    // Gap C crossing zone (y=22..28): SAFE — no risk
+    // default 0.0
+
+    std::pair<int,int> start = {2, 4};
+    std::pair<int,int> goal  = {28, 4};
+
+    std::cout << std::fixed << std::setprecision(2);
     std::cout << "Risk-Aware Path Planner\n"
-              << "Grid: " << grid_size << "x" << grid_size
+              << "Grid: " << W << "x" << H
               << "  Start: (" << start.first << "," << start.second << ")"
               << "  Goal: (" << goal.first << "," << goal.second << ")"
-              << "  Alpha: " << alpha << "\n";
+              << "  Alpha: " << alpha << "\n"
+              << "Gap A (y=4-5): HIGH risk 0.9  |  "
+              << "Gap B (y=14-15): MED risk 0.4  |  "
+              << "Gap C (y=25-26): SAFE 0.0\n";
 
     // --- A* search ---
     AStarResult astar_result = astar_search(grid, start, goal, alpha);
     if (astar_result.found) {
-        grid.printGrid(astar_result.path, start, goal, "A* Raw Path");
-        std::cout << "  A* cost: " << astar_result.total_cost
-                  << "  |  path length: " << astar_result.path.size() << " cells\n";
+        grid.printGrid(astar_result.path, start, goal, "A* Path");
+        double risk = path_total_risk(astar_result.path, grid);
+        std::cout << "  cost: " << astar_result.total_cost
+                  << "  |  cells: " << astar_result.path.size()
+                  << "  |  risk exposure: " << risk << "\n";
 
-        // Smooth the A* path
-        SmoothedPath smoothed = smooth_path(astar_result.path, grid);
-        grid.printGrid(smoothed.path, start, goal, "A* Smoothed Path");
-        std::cout << "  Smoothed: " << smoothed.original_length
-                  << " -> " << smoothed.smoothed_length << " waypoints"
-                  << "  |  euclidean length: " << path_euclidean_length(smoothed.path) << "\n";
+        SmoothedPath smoothed = smooth_path(astar_result.path, grid, alpha);
+        grid.printGrid(smoothed.path, start, goal, "A* Smoothed");
+        double s_risk = path_total_risk(smoothed.path, grid);
+        std::cout << "  waypoints: " << smoothed.original_length
+                  << " -> " << smoothed.smoothed_length
+                  << "  |  length: " << path_euclidean_length(smoothed.path)
+                  << "  |  risk: " << s_risk << "\n";
     } else {
         std::cout << "  A*: no path found\n";
     }
 
-    // --- RRT search ---
-    RRTResult rrt_result = rrt_search(grid, start, goal, alpha);
+    // --- RRT* search ---
+    RRTResult rrt_result = rrt_star_search(grid, start, goal, alpha, 8000, 2.0);
     if (rrt_result.found) {
-        grid.printGrid(rrt_result.path, start, goal, "RRT Path");
-        std::cout << "  RRT cost: " << rrt_result.total_cost
-                  << "  |  path length: " << rrt_result.path.size() << " cells"
-                  << "  |  iterations: " << rrt_result.iterations_used << "\n";
+        grid.printGrid(rrt_result.path, start, goal, "RRT* Path");
+        double risk = path_total_risk(rrt_result.path, grid);
+        std::cout << "  cost: " << rrt_result.total_cost
+                  << "  |  cells: " << rrt_result.path.size()
+                  << "  |  risk: " << risk
+                  << "  |  tree: " << rrt_result.tree_size
+                  << "  |  iters: " << rrt_result.iterations_used << "\n";
     } else {
-        std::cout << "  RRT: no path found after " << rrt_result.iterations_used
-                  << " iterations\n";
+        std::cout << "  RRT*: no path found (" << rrt_result.iterations_used << " iters)\n";
     }
 
-    // --- Comparison ---
-    if (astar_result.found && rrt_result.found) {
-        std::cout << "\nComparison (alpha=" << alpha << "):\n"
-                  << "  A* cost:  " << astar_result.total_cost << "\n"
-                  << "  RRT cost: " << rrt_result.total_cost << "\n"
-                  << "  A* is " << (astar_result.total_cost <= rrt_result.total_cost
-                                    ? "optimal" : "suboptimal")
-                  << " for this configuration.\n";
-    }
+    // --- Summary ---
+    std::cout << "\n--- Summary (alpha=" << alpha << ") ---\n";
+    if (astar_result.found)
+        std::cout << "  A*   cost: " << astar_result.total_cost
+                  << "  |  risk: " << path_total_risk(astar_result.path, grid) << "\n";
+    if (rrt_result.found)
+        std::cout << "  RRT* cost: " << rrt_result.total_cost
+                  << "  |  risk: " << path_total_risk(rrt_result.path, grid) << "\n";
 
     return 0;
 }
