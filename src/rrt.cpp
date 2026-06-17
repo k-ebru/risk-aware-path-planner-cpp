@@ -12,6 +12,7 @@ double distance(int x1, int y1, int x2, int y2) {
     return std::sqrt(dx * dx + dy * dy);
 }
 
+// Edge cost uses average risk of both endpoints, scaled by distance and alpha
 double edge_cost(const Grid& grid, int x1, int y1, int x2, int y2, double alpha) {
     double dist = distance(x1, y1, x2, y2);
     double avg_risk = (grid.getRisk(x1, y1) + grid.getRisk(x2, y2)) * 0.5;
@@ -32,6 +33,7 @@ std::pair<int,int> steer(int from_x, int from_y, int to_x, int to_y, int step_si
     return {new_x, new_y};
 }
 
+// Bresenham's line algorithm for collision checking
 bool line_of_sight(const Grid& grid, int x1, int y1, int x2, int y2) {
     int dx = std::abs(x2 - x1);
     int dy = std::abs(y2 - y1);
@@ -94,7 +96,8 @@ RRTResult rrt_star_search(const Grid& grid,
             sample_y = dist_y(rng);
         }
 
-        // Find nearest node by cost-weighted distance
+        // Cost-weighted nearest: not just closest in space, but also prefer low-cost nodes.
+        // Without this, RRT* ignores risk and always goes through the nearest gap.
         int nearest_idx = -1;
         double min_score = std::numeric_limits<double>::max();
         for (int i = 0; i < static_cast<int>(tree.size()); ++i) {

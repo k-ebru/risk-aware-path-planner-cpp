@@ -16,6 +16,7 @@ struct AStarNode {
     }
 };
 
+// Euclidean distance — admissible heuristic for 8-connected grids
 double heuristic(int x1, int y1, int x2, int y2) {
     double dx = x1 - x2;
     double dy = y1 - y2;
@@ -76,6 +77,7 @@ AStarResult astar_search(const Grid& grid,
 
         int current_key = encode(current.x, current.y, w);
 
+        // Skip stale entries — the node may have been updated with a better cost
         if (current.g_cost > g_costs[current_key])
             continue;
 
@@ -86,6 +88,7 @@ AStarResult astar_search(const Grid& grid,
             if (!grid.isValid(nx, ny))
                 continue;
 
+            // This is the key: alpha scales how much we penalize risk
             double step_cost = move_cost[i] + alpha * grid.getRisk(nx, ny);
             double new_g = current.g_cost + step_cost;
             int neighbor_key = encode(nx, ny, w);

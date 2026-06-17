@@ -35,6 +35,7 @@ double Grid::getRisk(int x, int y) const {
 int Grid::getWidth() const { return width_; }
 int Grid::getHeight() const { return height_; }
 
+// Walk along a line between two points in small increments and check for obstacles
 bool Grid::checkLineCollision(double x1, double y1, double x2, double y2, int steps) const {
     double dx = (x2 - x1) / steps;
     double dy = (y2 - y1) / steps;
@@ -91,6 +92,8 @@ void Grid::printGrid(const std::vector<std::pair<int,int>>& path,
                 std::cout << '*';
             } else if (risk_map_[y][x] >= 0.7) {
                 std::cout << '~';
+            } else if (risk_map_[y][x] >= 0.3) {
+                std::cout << ':';
             } else {
                 std::cout << '.';
             }

@@ -86,8 +86,9 @@ int main(int argc, char* argv[]) {
               << "  Goal: (" << goal.first << "," << goal.second << ")"
               << "  Alpha: " << alpha << "\n"
               << "Gap A (y=4-5): HIGH risk 0.9  |  "
-              << "Gap B (y=14-15): MED risk 0.4  |  "
-              << "Gap C (y=25-26): SAFE 0.0\n";
+              << "Gap B (y=14-15): MED risk 0.5  |  "
+              << "Gap C (y=25-26): SAFE 0.0\n"
+              << "Legend: S=start G=goal #=wall *=path ~=high risk :=medium risk .=free\n";
 
     // --- A* search ---
     AStarResult astar_result = astar_search(grid, start, goal, alpha);
