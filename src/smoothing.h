@@ -11,4 +11,5 @@ struct SmoothedPath {
 };
 
 SmoothedPath smooth_path(const std::vector<std::pair<int,int>>& raw_path,
-                         const Grid& grid);
+                         const Grid& grid,
+                         double alpha = 0.0);

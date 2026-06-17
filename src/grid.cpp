@@ -50,6 +50,22 @@ bool Grid::checkLineCollision(double x1, double y1, double x2, double y2, int st
     return false;
 }
 
+double Grid::lineMaxRisk(double x1, double y1, double x2, double y2, int steps) const {
+    double dx = (x2 - x1) / steps;
+    double dy = (y2 - y1) / steps;
+    double max_risk = 0.0;
+
+    for (int i = 0; i <= steps; ++i) {
+        int ix = static_cast<int>(x1 + dx * i);
+        int iy = static_cast<int>(y1 + dy * i);
+        if (ix >= 0 && ix < width_ && iy >= 0 && iy < height_) {
+            if (risk_map_[iy][ix] > max_risk)
+                max_risk = risk_map_[iy][ix];
+        }
+    }
+    return max_risk;
+}
+
 void Grid::printGrid(const std::vector<std::pair<int,int>>& path,
                      std::pair<int,int> start,
                      std::pair<int,int> goal,
