@@ -16,7 +16,7 @@ struct AStarNode {
     }
 };
 
-// Euclidean distance — admissible heuristic for 8-connected grids
+// Euclidean distance - admissible heuristic for 8-connected grids
 double heuristic(int x1, int y1, int x2, int y2) {
     double dx = x1 - x2;
     double dy = y1 - y2;
@@ -77,7 +77,7 @@ AStarResult astar_search(const Grid& grid,
 
         int current_key = encode(current.x, current.y, w);
 
-        // Skip stale entries — the node may have been updated with a better cost
+        // Skip stale entries - the node may have been updated with a better cost
         if (current.g_cost > g_costs[current_key])
             continue;
 

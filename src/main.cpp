@@ -49,9 +49,9 @@ int main(int argc, char* argv[]) {
     Grid grid(W, H);
 
     // === Vertical wall at x=15 with 3 gaps ===
-    // Gap A (y=4,5):   closest to start/goal — HIGH RISK passage
-    // Gap B (y=14,15): medium distance — MEDIUM RISK passage
-    // Gap C (y=25,26): farthest — SAFE passage
+    // Gap A (y=4,5):   closest to start/goal - HIGH RISK passage
+    // Gap B (y=14,15): medium distance - MEDIUM RISK passage
+    // Gap C (y=25,26): farthest - SAFE passage
     for (int y = 0; y < H; ++y) {
         bool is_gap = (y == 4 || y == 5)
                    || (y == 14 || y == 15)
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
             grid.setObstacle(15, y);
     }
 
-    // === Risk zones — narrow bands around the wall ===
+    // === Risk zones - narrow bands around the wall ===
     // Risk only near the crossing area so vertical travel is safe
 
     // Gap A crossing zone (y=1..7, x=10..20): HIGH RISK
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         for (int x = 10; x <= 20; ++x)
             grid.setRisk(x, y, 0.5);
 
-    // Gap C crossing zone (y=22..28): SAFE — no risk
+    // Gap C crossing zone (y=22..28): SAFE - no risk
     // default 0.0
 
     std::pair<int,int> start = {2, 4};
